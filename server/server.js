@@ -861,6 +861,8 @@ app.get('/api/option-percentages', async (req, res) => {
         }
 
         const { correct_count, total_count } = results[0];
+        console.log("正确人数", correct_count);
+        console.log("总人数", total_count);
         const optionPercentages = `${correct_count}/${total_count}`;
         console.log("正确人数比例", optionPercentages);
         res.json({ optionPercentages });
@@ -890,7 +892,7 @@ app.get('/api/option-counts', async (req, res) => {
             ${question}
     `;
 
-    db.query(optionCountsQuery, [class_no, school_no], (err, results) => {
+    db.query(optionCountsQuery, [school_no, class_no], (err, results) => {
         if (err) {
             console.error('Database query failed:', err);
             return res.status(500).json({ message: 'Server error' });
@@ -1235,9 +1237,7 @@ app.get('/part2_9/average/:school_no/:class_no', (req, res) => {
     });
 });
 
-
-
-
 app.listen(3000, () => {
     console.log('服务器运行在 http://localhost:3000');
 });
+
