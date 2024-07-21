@@ -933,6 +933,309 @@ app.get('/api/question_single', (req, res) => {
     });
 });
 
+// 筛选数据并计算错误类型总和和平均分
+app.get('/part2_1/filter', (req, res) => {
+    const { school_no, class_no } = req.query;
+
+    if (!school_no || !class_no) {
+        res.status(400).send('缺少筛选条件');
+        return;
+    }
+
+    const sql = `
+        SELECT
+            capital_name,
+            capital_first_word,
+            copy,
+            punctuation,
+            others,
+            score
+        FROM part2_1
+        WHERE school_no = ? AND class_no = ?
+    `;
+
+    db.query(sql, [school_no, class_no], (err, results) => {
+        if (err) {
+            console.error('筛选数据失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+
+        if (results.length === 0) {
+            res.status(404).send('没有找到数据');
+            return;
+        }
+
+        const averageScore = results.reduce((sum, entry) => sum + parseFloat(entry.score), 0) / results.length;
+
+        const errorCounts = {
+            capital_name: results.reduce((sum, entry) => sum + (parseFloat(entry.capital_name) || 0), 0),
+            capital_first_word: results.reduce((sum, entry) => sum + (parseFloat(entry.capital_first_word) || 0), 0),
+            copy: results.reduce((sum, entry) => sum + (parseFloat(entry.copy) || 0), 0),
+            punctuation: results.reduce((sum, entry) => sum + (parseFloat(entry.punctuation) || 0), 0),
+            others: results.reduce((sum, entry) => sum + (parseFloat(entry.others) || 0), 0)
+        };
+
+        res.send({
+            averageScore,
+            errorCounts,
+            results
+        });
+    });
+});
+
+// 获取所有数据，供管理员使用
+app.get('/part2_1/all', (req, res) => {
+    const sql = `
+        SELECT
+            capital_name,
+            capital_first_word,
+            copy,
+            punctuation,
+            others,
+            score
+        FROM part2_1
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('获取所有数据失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+
+        if (results.length === 0) {
+            res.status(404).send('没有找到数据');
+            return;
+        }
+
+        const averageScore = results.reduce((sum, entry) => sum + parseFloat(entry.score), 0) / results.length;
+
+        const errorCounts = {
+            capital_name: results.reduce((sum, entry) => sum + (parseFloat(entry.capital_name) || 0), 0),
+            capital_first_word: results.reduce((sum, entry) => sum + (parseFloat(entry.capital_first_word) || 0), 0),
+            copy: results.reduce((sum, entry) => sum + (parseFloat(entry.copy) || 0), 0),
+            punctuation: results.reduce((sum, entry) => sum + (parseFloat(entry.punctuation) || 0), 0),
+            others: results.reduce((sum, entry) => sum + (parseFloat(entry.others) || 0), 0)
+        };
+
+        res.send({
+            averageScore,
+            errorCounts,
+            results
+        });
+    });
+});
+
+// 获取学生数据
+app.get('/part2_1/:username', (req, res) => {
+    const username = req.params.username;
+    const sql = 'SELECT * FROM part2_1 WHERE user = ?';
+    db.query(sql, [username], (err, result) => {
+        if (err) {
+            console.error('获取学生数据失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+        if (result.length > 0) {
+            const data = result[0];
+            const base64Image = Buffer.from(data.image).toString('base64');
+            data.image = base64Image;
+            res.send(data);
+        } else {
+            res.status(404).send('哈哈哈');
+        }
+    });
+});
+
+// 获取班级的平均分
+app.get('/part2_1/average/:school_no/:class_no', (req, res) => {
+    const { school_no, class_no } = req.params;
+    const sql = 'SELECT AVG(score) AS average FROM part2_1 WHERE school_no = ? AND class_no = ?';
+    db.query(sql, [school_no, class_no], (err, result) => {
+        if (err) {
+            console.error('获取平均分失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+        res.send(result[0]);
+    });
+});
+
+// 获取老师权限
+app.get('/teacher/:username', (req, res) => {
+    const username = req.params.username;
+    const sql = 'SELECT permission FROM teacher WHERE name = ?';
+    db.query(sql, [username], (err, result) => {
+        if (err) {
+            console.error('获取教师数据失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+        if (result.length > 0) {
+            res.send(result[0]);
+        } else {
+            res.status(404).send('not found');
+        }
+    });
+});
+
+// 获取指定学生的图像数据
+app.get('/part2_9/image/:name', (req, res) => {
+    const name = req.params.name;
+    const sql = 'SELECT image FROM part2_9 WHERE name = ?';
+    db.query(sql, [name], (err, result) => {
+        if (err) {
+            console.error('获取图像数据失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+        if (result.length > 0) {
+            const image = result[0].image;
+            if (image) {
+                const base64Image = Buffer.from(image).toString('base64');
+                res.send({ image: base64Image });
+            } else {
+                res.status(404).send('没有图像数据');
+            }
+        } else {
+            res.status(404).send('没有找到数据');
+        }
+    });
+});
+
+// 获取班级的平均分和学生信息
+app.get('/part2_9/filter', (req, res) => {
+    const { school_no, class_no } = req.query;
+
+    if (!school_no || !class_no) {
+        res.status(400).send('缺少筛选条件');
+        return;
+    }
+
+    const sql = `
+        SELECT
+            name,
+            score,
+            word_counts,
+            sentence_counts
+        FROM part2_9
+        WHERE school_no = ? AND class_no = ?
+    `;
+
+    db.query(sql, [school_no, class_no], (err, results) => {
+        if (err) {
+            console.error('筛选数据失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+
+        if (results.length === 0) {
+            res.status(404).send('没有找到数据');
+            return;
+        }
+
+        const scores = results.map(entry => ({ name: entry.name, score: entry.score }));
+        const averageScore = scores.reduce((sum, entry) => sum + parseFloat(entry.score), 0) / scores.length;
+
+        const wordCounts = results.map(entry => entry.word_counts);
+        const sentenceCounts = results.map(entry => entry.sentence_counts);
+
+        res.send({
+            averageScore,
+            scores,
+            wordCounts,
+            sentenceCounts
+        });
+    });
+});
+
+// 获取教师权限
+app.get('/teacher/:username', (req, res) => {
+    const username = req.params.username;
+    const sql = 'SELECT permission FROM teacher WHERE name = ?';
+    db.query(sql, [username], (err, result) => {
+        if (err) {
+            console.error('获取教师数据失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+        if (result.length > 0) {
+            res.send(result[0]);
+        } else {
+            res.status(404).send('not found');
+        }
+    });
+});
+
+// 获取所有数据，供管理员使用
+app.get('/part2_9/all', (req, res) => {
+    const sql = `
+    SELECT
+      name,
+      score,
+      word_counts,
+      sentence_counts
+    FROM part2_9
+  `;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('获取所有数据失败:', err);
+            res.status(500).json({ error: '获取所有数据失败' });
+        } else {
+            const scores = results.map(result => ({ name: result.name, score: result.score }));
+            const wordCounts = results.map(result => result.word_counts);
+            const sentenceCounts = results.map(result => result.sentence_counts);
+            const averageScore = scores.reduce((sum, item) => sum + item.score, 0) / scores.length;
+
+            res.json({ scores, wordCounts, sentenceCounts, averageScore });
+        }
+    });
+});
+
+
+// 获取学生数据
+app.get('/part2_9/:username', (req, res) => {
+    const username = req.params.username;
+    const sql = 'SELECT * FROM part2_9 WHERE name = ?';
+    db.query(sql, [username], (err, result) => {
+        if (err) {
+            console.error('获取学生数据失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+        if (result.length > 0) {
+            const data = result[0];
+            if (data.image) {
+                const base64Image = Buffer.from(data.image).toString('base64');
+                data.image = base64Image;
+            } else {
+                console.warn('学生数据中没有图像数据:', username);
+            }
+            res.send(data);
+        } else {
+            res.status(404).send('没有找到数据');
+        }
+    });
+});
+
+
+// 作文获取同伴均分
+app.get('/part2_9/average/:school_no/:class_no', (req, res) => {
+    const { school_no, class_no } = req.params;
+    const sql = 'SELECT AVG(score) AS average FROM part2_9 WHERE school_no = ? AND class_no = ?';
+    db.query(sql, [school_no, class_no], (err, result) => {
+        if (err) {
+            console.error('获取平均分失败:', err);
+            res.status(500).send('服务器错误');
+            return;
+        }
+        res.send(result[0]);
+    });
+});
+
+
 
 
 app.listen(3000, () => {
