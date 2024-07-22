@@ -230,7 +230,7 @@ app.get('/api/student-score-summary', (req, res) => {
 
             const summary = results[0];
 
-            let countQuery = 'SELECT COUNT(*) AS total FROM grade WHERE school_no = ? AND class_no = ?';
+            let countQuery = 'SELECT COUNT(*) AS total FROM gradeHave WHERE school_no = ? AND class_no = ?';
             db.query(countQuery, params, (err, countResults) => {
                 if (err) {
                     console.error('Count query failed:', err);
@@ -250,7 +250,7 @@ app.get('/api/student-score-summary', (req, res) => {
                 const q3Offset = Math.floor(3 * total / 4);
 
                 let medianQuery = `
-                    SELECT score FROM grade 
+                    SELECT score FROM gradeHave 
                     WHERE school_no = ? AND class_no = ?
                     ORDER BY score 
                     LIMIT 1 OFFSET ?
@@ -264,7 +264,7 @@ app.get('/api/student-score-summary', (req, res) => {
                     summary.median_score = medianResults[0] ? medianResults[0].score : null;
 
                     let q1Query = `
-                        SELECT score FROM grade 
+                        SELECT score FROM gradeHave
                         WHERE school_no = ? AND class_no = ?
                         ORDER BY score 
                         LIMIT 1 OFFSET ?
@@ -278,7 +278,7 @@ app.get('/api/student-score-summary', (req, res) => {
                         summary.q1_score = q1Results[0] ? q1Results[0].score : null;
 
                         let q3Query = `
-                            SELECT score FROM grade 
+                            SELECT score FROM gradeHave 
                             WHERE school_no = ? AND class_no = ?
                             ORDER BY score 
                             LIMIT 1 OFFSET ?
@@ -1279,4 +1279,3 @@ app.get('/part2_9/average/:school_no/:class_no', (req, res) => {
 app.listen(3000, () => {
     console.log('服务器运行在 http://localhost:3000');
 });
-
