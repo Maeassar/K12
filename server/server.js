@@ -10,7 +10,7 @@ app.use(cors());
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root', 
-    password: '123456', 
+    password: '33916807Ct', 
     database: 'K12'
 });
 
@@ -588,7 +588,7 @@ app.get('/api/admin-scores', (req, res) => {
         const averages = results[0];
 
         // 计算每个大题的得分率
-        const totals = {
+        const totals_pre = {
             PART1_I_total: (averages.PART1_I_1_score || 0) + (averages.PART1_I_2_score || 0) + (averages.PART1_I_3_score || 0) + (averages.PART1_I_4_score || 0) + (averages.PART1_I_5_score || 0) + (averages.PART1_I_6_score || 0),
             PART1_II_total: (averages.PART1_II_1_score || 0) + (averages.PART1_II_2_score || 0) + (averages.PART1_II_3_score || 0) + (averages.PART1_II_4_score || 0) + (averages.PART1_II_5_score || 0) + (averages.PART1_II_6_score || 0),
             PART1_III_total: (averages.PART1_III_1_score || 0) + (averages.PART1_III_2_score || 0) + (averages.PART1_III_3_score || 0) + (averages.PART1_III_4_score || 0) + (averages.PART1_III_5_score || 0),
@@ -605,6 +605,45 @@ app.get('/api/admin-scores', (req, res) => {
             PART2_VI_total: (averages.PART2_VI_1_score || 0) + (averages.PART2_VI_2_score || 0) + (averages.PART2_VI_3_score || 0) + (averages.PART2_VI_4_score || 0) + (averages.PART2_VI_5_score || 0),
             PART2_VII_total: (averages.PART2_VII_1_score || 0) + (averages.PART2_VII_2_score || 0) + (averages.PART2_VII_3_score || 0) + (averages.PART2_VII_4_score || 0) + (averages.PART2_VII_5_score || 0),
             PART2_VIII_total: (averages.PART2_VIII_1_score || 0) + (averages.PART2_VIII_2_score || 0) + (averages.PART2_VIII_3_score || 0) + (averages.PART2_VIII_4_score || 0)
+        };
+
+        const questionCounts = {
+            PART1_I: 6,
+            PART1_II: 6,
+            PART1_III: 5,
+            PART1_IV: 5,
+            PART1_V: 4,
+            PART1_VI: 5,
+            PART1_VII: 5,
+            PART1_VIII: 4,
+            PART2_I: 1,
+            PART2_II: 5,
+            PART2_III: 4,
+            PART2_IV: 9,
+            PART2_V: 10,
+            PART2_VI: 5,
+            PART2_VII: 5,
+            PART2_VIII: 4
+        };
+
+        // 计算得分率
+        const totals = {
+            PART1_I_rate: totals_pre.PART1_I_total / questionCounts.PART1_I,
+            PART1_II_rate: totals_pre.PART1_II_total / questionCounts.PART1_II,
+            PART1_III_rate: totals_pre.PART1_III_total / questionCounts.PART1_III,
+            PART1_IV_rate: totals_pre.PART1_IV_total / questionCounts.PART1_IV,
+            PART1_V_rate: totals_pre.PART1_V_total / questionCounts.PART1_V,
+            PART1_VI_rate: totals_pre.PART1_VI_total / questionCounts.PART1_VI,
+            PART1_VII_rate: totals_pre.PART1_VII_total / questionCounts.PART1_VII,
+            PART1_VIII_rate: totals_pre.PART1_VIII_total / questionCounts.PART1_VIII,
+            PART2_I_rate: totals_pre.PART2_I_total / questionCounts.PART2_I,
+            PART2_II_rate: totals_pre.PART2_II_total / questionCounts.PART2_II,
+            PART2_III_rate: totals_pre.PART2_III_total / questionCounts.PART2_III,
+            PART2_IV_rate: totals_pre.PART2_IV_total / questionCounts.PART2_IV,
+            PART2_V_rate: totals_pre.PART2_V_total / questionCounts.PART2_V,
+            PART2_VI_rate: totals_pre.PART2_VI_total / questionCounts.PART2_VI,
+            PART2_VII_rate: totals_pre.PART2_VII_total / questionCounts.PART2_VII,
+            PART2_VIII_rate: totals_pre.PART2_VIII_total / questionCounts.PART2_VIII
         };
 
         // 返回计算结果
